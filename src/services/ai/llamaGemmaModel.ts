@@ -4,8 +4,9 @@ import { GEMMA_MODEL, isModelDownloaded, modelFile } from './gemmaModelFile';
 import { extractedActionJsonSchema } from './schema';
 import type { LocalModel } from './types';
 
-// Screenshot text beyond this is cut so prompt + answer fit in the context window.
-const MAX_OCR_CHARS = 3000;
+// Screenshot text beyond this is cut: prompt processing time grows with length,
+// and the answer usually sits near the top.
+const MAX_OCR_CHARS = 1500;
 
 export class ModelNotReadyError extends Error {}
 
@@ -17,15 +18,20 @@ async function getContext(): Promise<LlamaContext> {
     throw new ModelNotReadyError(`Download ${GEMMA_MODEL.name} from the Home screen first (one time, ${Math.round(GEMMA_MODEL.sizeBytes / 1e6)} MB).`);
   }
   contextPromise ??= (async () => {
-    let initLlama: typeof import('llama.rn').initLlama;
+    let llama: typeof import('llama.rn');
     try {
-      ({ initLlama } = await import('llama.rn'));
+      llama = await import('llama.rn');
     } catch {
       throw new ModelNotReadyError('Local Gemma needs the development build. Turn on demo mode in Settings to try the flow.');
     }
-    return initLlama({
+    // A JS reload forgets our context but the native one stays loaded; free it
+    // so two copies of the model don't push the phone into swap.
+    await llama.releaseAllLlama();
+    return llama.initLlama({
       model: modelFile().uri,
-      n_ctx: 2048,
+      n_ctx: 1536,
+      // 4 threads keeps work on the faster cores of big.LITTLE phone CPUs.
+      n_threads: 4,
       // Metal on iOS; on Android stay on CPU, since GPU (OpenCL) support varies by chipset.
       n_gpu_layers: Platform.OS === 'ios' ? 99 : 0,
       use_mlock: false,
@@ -49,7 +55,7 @@ export async function releaseGemma() {
  * threads, so the JS thread stays free while the model generates.
  */
 export const llamaGemmaModel: LocalModel = {
-  name: `${GEMMA_MODEL.name} (on device)`,
+  name: GEMMA_MODEL.name,
   async generate({ system, user }) {
     const context = await getContext();
     const result = await context.completion({
@@ -59,7 +65,7 @@ export const llamaGemmaModel: LocalModel = {
       ],
       jinja: true,
       response_format: { type: 'json_schema', json_schema: { strict: true, schema: extractedActionJsonSchema } },
-      n_predict: 320,
+      n_predict: 160,
       temperature: 0,
       stop: ['<end_of_turn>', '<eos>'],
     });

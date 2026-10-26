@@ -1,3 +1,4 @@
+import { joinBlocksByRow, normaliseOcrText } from './layout';
 import type { OcrService } from './types';
 import { OcrError } from './types';
 
@@ -20,7 +21,8 @@ export const mlKitOcrService: OcrService = {
 
     try {
       const result = await recognizeText(imageUri);
-      return { text: result.text, durationMs: Date.now() - started };
+      const text = result.blocks.length ? joinBlocksByRow(result.blocks) : result.text;
+      return { text: normaliseOcrText(text), durationMs: Date.now() - started };
     } catch (e) {
       throw new OcrError(e instanceof Error ? e.message : 'Text recognition failed.');
     }

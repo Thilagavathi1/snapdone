@@ -85,15 +85,9 @@ export const useCaptureStore = create<CaptureState>((set, get) => ({
 
     const result = await ai.extract(ocrText);
     if (run !== currentRun) return;
-    if (__DEV__) {
-      // Chunked: the debugger truncates long messages.
-      for (let i = 0; i < ocrText.length; i += 400) console.log(`[ocr ${i}]`, ocrText.slice(i, i + 400));
-      console.log('[ai]', JSON.stringify(result));
-    }
     if (result.ok) {
       set({ phase: 'ready', draft: toDraft(result.action), confidence: result.action.confidence, durationMs: result.durationMs });
     } else {
-      console.warn('Extraction needs review:', result.reason);
       set({ phase: 'needs_review', editing: true, failureReason: result.reason, durationMs: result.durationMs });
     }
   },

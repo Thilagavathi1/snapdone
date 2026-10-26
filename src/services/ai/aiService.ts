@@ -1,3 +1,4 @@
+import { fillFromText } from './fillFromText';
 import { buildExtractionPrompt } from './prompt';
 import { parseModelOutput } from './schema';
 import type { AiService, LocalModel } from './types';
@@ -21,7 +22,9 @@ export function createAiService(model: LocalModel): AiService {
 
       const parsed = parseModelOutput(raw);
       const durationMs = Date.now() - started;
-      return parsed.ok ? { ok: true, action: parsed.action, durationMs } : { ok: false, reason: parsed.reason, durationMs, raw };
+      return parsed.ok
+        ? { ok: true, action: fillFromText(parsed.action, ocrText), durationMs }
+        : { ok: false, reason: parsed.reason, durationMs, raw };
     },
   };
 }

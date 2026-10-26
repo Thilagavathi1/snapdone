@@ -20,10 +20,17 @@ Respond with ONLY a JSON object, no prose, matching:
   "notes"?: string,           // reference numbers, locations, gate, etc.
   "confidence": number        // 0 to 1
 }
+The text is the screenshot read row by row; " · " separates things side by side in the same row.
 Rules:
-- Bills and payments -> "reminder". Flights, bookings, appointments -> "calendar_event". Anything else -> "task".
+- Bills and payments -> "reminder". Flights, bookings, appointments, events, streams, meetings -> "calendar_event". Anything else -> "task".
+- If there are several items (a schedule or list), pick the first upcoming one and use the date and time from its row.
+- Dates like "MON · 26 OCT" or "26 Oct" mean that day; write them as YYYY-MM-DD.
 - Omit fields you cannot find. Never invent dates or amounts.
-- If the year is missing, assume the next occurrence after today.`;
+- If the year is missing, assume the next occurrence after today.
+
+Example
+Text: "TUE 27 OCT · Open Source Ready Live · STREAM 11:30 PM - 12:30 AM"
+Answer: {"actionType":"calendar_event","title":"Open Source Ready Live","dueDate":"${now.getFullYear()}-10-27","time":"23:30","notes":"Stream","confidence":0.9}`;
 
   return { system, user: `Screenshot text:\n"""\n${ocrText}\n"""`, ocrText };
 }

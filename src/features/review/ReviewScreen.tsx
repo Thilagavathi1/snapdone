@@ -165,7 +165,7 @@ export const ReviewScreen: React.FC<ReviewScreenProps> = ({ onBack, onCreated })
               <View style={styles.tileRow}>
                 <View style={[styles.valueTile, styles.dueTile]}>
                   <View style={styles.valueTileHeader}>
-                    <Text style={styles.valueLabel}>Due Date</Text>
+                    <Text style={styles.valueLabel}>{draft.actionType === 'reminder' ? 'Due Date' : 'Date'}</Text>
                     <Ionicons name="checkmark-circle-outline" size={20} color={colors.secondary} />
                   </View>
                   <Text style={[styles.valueText, { color: colors.secondary }]}>
@@ -183,7 +183,8 @@ export const ReviewScreen: React.FC<ReviewScreenProps> = ({ onBack, onCreated })
               <View style={styles.entityRow}>
                 <Ionicons name="hardware-chip-outline" size={17} color={colors.secondary} style={{ marginRight: 8 }} />
                 <Text style={styles.entityText}>
-                  {filledCount} details identified on-device in {durationMs}ms
+                  {filledCount} {filledCount === 1 ? 'detail' : 'details'} identified on-device in{' '}
+                  {(durationMs / 1000).toFixed(1)}s
                 </Text>
               </View>
             </>
@@ -291,6 +292,7 @@ export const ReviewScreen: React.FC<ReviewScreenProps> = ({ onBack, onCreated })
             onChange={(title) => updateDraft({ title })}
             editable={editing}
             large
+            multiline
           />
 
           <View style={styles.row}>

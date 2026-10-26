@@ -89,6 +89,12 @@ export function formatLongDate(isoDate: string | undefined): string | undefined 
   return date?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+/** (10, "30", "pm") -> "22:30"; without a meridiem the hour is taken as 24-hour. */
+export function to24h(hour: number, minutes: string, meridiem?: string): string {
+  const h = meridiem ? (hour % 12) + (meridiem.toLowerCase() === 'pm' ? 12 : 0) : hour;
+  return `${pad(h)}:${minutes}`;
+}
+
 /** "09:00" -> "9:00 AM" */
 export function formatTime(time: string | undefined): string | undefined {
   if (!time) return undefined;

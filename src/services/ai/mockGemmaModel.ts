@@ -1,14 +1,8 @@
 import type { ExtractedAction } from '@/types/action';
-import { findDateInText } from '@/utils/dates';
+import { findDateInText, to24h } from '@/utils/dates';
 import type { LocalModel } from './types';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function to24h(hour: number, minutes: string, meridiem?: string): string {
-  const pm = meridiem?.toLowerCase() === 'pm';
-  const h = meridiem ? (hour % 12) + (pm ? 12 : 0) : hour;
-  return `${String(h).padStart(2, '0')}:${minutes}`;
-}
 
 /**
  * Stands in for Gemma during UI development. Uses simple pattern matching, then
